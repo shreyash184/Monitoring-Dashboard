@@ -53,7 +53,7 @@ x-airflow-common:
   # build: .
   environment:
     &airflow-common-env
-    AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
@@ -72,7 +72,7 @@ x-airflow-common:
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
-    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
+    - ${AIRFLOW_PROJ_DIR:-.}/configs:/opt/airflow/configs
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
@@ -278,6 +278,17 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+
+  statsd-exporter:
+    image: prom/statsd-exporter:v0.21.0
+    volumes:
+      - ./configs/statsd.yaml:/home/statsd-mapping-configs.yaml
+    entrypoint: ["/bin/sh", "-c", "--"]
+    command: ["statsd_exporter --log.level debug --statsd.mapping-config=/home/statsd-mapping-configs.yaml"]
+    ports:
+      - 9102:9102
+      - 9125:9125
+    restart: always
 
 volumes:
   postgres-db-volume:
