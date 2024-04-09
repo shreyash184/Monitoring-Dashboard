@@ -262,3 +262,10 @@ mappings:
     labels:
       airflow_id: "$1"
       dag_id: "$2"
+  - match: "*.dag.*.*.my_counter"
+    match_metric_type: counter
+    name: "my_custom_task_counter"
+    labels: 
+      airflow_id: "$1"
+      dag_id: "$2"
+      task_id: "$3"
